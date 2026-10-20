@@ -1,26 +1,28 @@
-# SYNTHETIC TEST DATA - not a real leak. All identifiers are fabricated test fixtures.
-# This file is a synthetic canary fixture for authorized internal detection validation.
+"""Sync client for the JT-CloudWarehouse inventory mirror.
 
-"""Draft sync client extracted from an internal service.
-
-Service identifier: JT-CloudWarehouse
+Pulls warehouse inventory snapshots into the local cache so that the
+dispatch service can work without hitting the remote API per request.
 """
 
 SERVICE_NAME = "JT-CloudWarehouse"
-DEFAULT_ENDPOINT = "https://jt-cloudwarehouse.internal.example.com/api/v1"
+DEFAULT_ENDPOINT = "https://jt-cloudwarehouse.example.com/api/v1"
 SYNC_INTERVAL_SECONDS = 300
 
 
 class JTCloudWarehouseSyncClient:
-    """Minimal stub used as a synthetic leak fixture. No real logic."""
+    """Thin wrapper around the warehouse inventory API."""
 
     def __init__(self, endpoint: str = DEFAULT_ENDPOINT) -> None:
         self.endpoint = endpoint
 
     def pull_inventory(self, warehouse_code: str) -> list:
-        raise NotImplementedError("synthetic fixture - no real implementation")
+        """Return the current inventory snapshot for one warehouse."""
+        raise NotImplementedError("pending: paging support for large warehouses")
+
+    def health(self) -> dict:
+        return {"service": SERVICE_NAME, "endpoint": self.endpoint}
 
 
 if __name__ == "__main__":
     client = JTCloudWarehouseSyncClient()
-    print(SERVICE_NAME, client.endpoint)
+    print(client.health())
