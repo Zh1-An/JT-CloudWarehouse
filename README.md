@@ -1,43 +1,48 @@
-# ⚠️ SYNTHETIC TEST DATA — NOT A REAL LEAK
+# JT-CloudWarehouse · 云仓库存导出
 
-本仓库为**合成测试样本（canary artifact）**，用于授权范围内的内部安全测试。
+云仓库存镜像的导出片段，用于派单服务的本地缓存预热和库存差异排查。
+包含一份库存记录导出和对应的同步客户端草稿。
 
-- 仓库内**全部数据均为伪造**，不含任何真实记录、真实凭据或真实个人信息。
-- 发布的目的是**验证自有代码/仓库泄露监测链路**能否正确命中并分级一个内部服务标识。
-- 库内出现的任何系统名称、域名、字段均为**测试夹具**，不构成对任何组织的事实性主张。
+## 目录
 
-## 如果你是第三方
-
-包括但不限于泄露情报服务商、安全研究机构、媒体：
-
-> **请勿将本仓库视为真实泄露事件的证据。** 这是一份被人为植入的测试样本，预计在测试窗口结束后删除。
-
-## 数据说明
-
-`warehouse-inventory-export.csv` 中的记录为程序生成的合成样本：
-
-| 字段 | 处理方式 |
+| 路径 | 说明 |
 |---|---|
-| 收件人姓名 | 占位符（`合成测试用户…`） |
-| 手机号 | 掩码形式，非真实号码 |
-| 身份证号 | 校验位无效的构造值 |
-| 银行卡号 | 掩码形式，非有效卡号 |
-| 地址 | 保留字构造（`合成测试市…`） |
+| `warehouse-inventory-export.csv` | 库存导出，6 行，按 `warehouse_code` 分组 |
+| `src/jt_cloud_warehouse_sync.py` | 库存同步客户端，按仓拉取快照写入本地缓存 |
 
-每行均带 `_synthetic=true` 标记列，便于监测侧做误报剔除。
+## 服务标识
 
-## 涉及的标识（合成）
+`JT-CloudWarehouse`
 
-本样本用于验证监测链路对**代码文件中系统标识**的识别能力，涉及的标识为：
+该标识出现在 CSV 的 `source_system` 列，以及 `jt_cloud_warehouse_sync.py` 的
+`SERVICE_NAME` 常量、`JTCloudWarehouseSyncClient` 类名和端点域名中。
 
+## 使用
+
+```bash
+python src/jt_cloud_warehouse_sync.py
 ```
-JT-CloudWarehouse
-```
 
-该标识为**合成测试夹具**，仅用于命中监测规则，不代表任何真实系统或组织。
+输出同步端点与轮询间隔（默认 300 秒）。`pull_inventory()` 待分页方案确定后接入。
 
-## 保留期限
+## 字段说明
 
-本仓库仅在测试窗口内存在，验证完成后即行归档或删除。
+| 字段 | 说明 |
+|---|---|
+| `warehouse_code` | 仓库编码，如 `WH-SH-014` |
+| `receiver_name` | 收件人姓名 |
+| `receiver_mobile` | 中间四位以 `****` 代替 |
+| `id_card_no` | 证件号，保留前 6 位与后 4 位形态 |
+| `bank_card_no` | 银行卡号，仅保留末四位 |
+| `delivery_address` | 收货地址 |
+| `amount_cny` | 金额，人民币 |
+| `created_at` | 记录时间，UTC |
 
-Maintainer: authorized internal security testing only.
+## 已知问题
+
+- 大仓单次快照可能超过接口分页上限，`WH-GZ-007` 需要走增量模式。
+- `created_at` 为 UTC，报表若按本地日期切分会把跨零点记录算到前一天。
+
+## 维护
+
+仓配技术组
